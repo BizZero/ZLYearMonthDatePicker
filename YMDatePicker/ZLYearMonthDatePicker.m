@@ -16,6 +16,9 @@
 {
     NSString *_selectedDateString;
     
+    NSInteger _selectedYear;
+    NSInteger _selectedMonth;
+    
     NSInteger _minYearRow;
     NSInteger _minMonthRow;
     NSInteger _maxYearRow;
@@ -109,7 +112,7 @@
             UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, YM_SCREEN_WIDTH / 2.0, 40)];
             label.text = [NSString stringWithFormat:@"%.2ld月",row + 1];
             label.textAlignment = NSTextAlignmentCenter;
-            if (([pickerView selectedRowInComponent:0] == _minYearRow && row < _minMonthRow) || ([pickerView selectedRowInComponent:0] == _maxYearRow && row > _maxMonthRow)) {
+            if ((_selectedYear == _minYearRow && row < _minMonthRow) || (_selectedYear == _maxYearRow && row > _maxMonthRow)) {
                 label.textColor = [UIColor lightGrayColor];
 
             } else {
@@ -149,32 +152,53 @@
             if (row < _minYearRow) {
                 [pickerView selectRow:_minYearRow inComponent:0 animated:YES];
                 _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",_minYearRow + 1970,[_pickerView selectedRowInComponent:1] + 1];
-                
-            } else if (row > _maxYearRow) {
-                _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",_maxYearRow + 1970,[_pickerView selectedRowInComponent:1] + 1];
-                [pickerView selectRow:_maxYearRow inComponent:0 animated:YES];
-            }
-            
-            if (row == _minYearRow) {
+                _selectedYear = _minYearRow;
                 if ([pickerView selectedRowInComponent:1] < _minMonthRow) {
                     [pickerView selectRow:_minMonthRow inComponent:1 animated:YES];
                     _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",_minYearRow + 1970,_minMonthRow];
+                    _selectedMonth = _minMonthRow;
+                    [pickerView reloadComponent:1];
+                }
+                
+            } else if (row > _maxYearRow) {
+                _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",_maxYearRow + 1970,[_pickerView selectedRowInComponent:1] + 1];
+                _selectedYear = _maxYearRow;
+                [pickerView selectRow:_maxYearRow inComponent:0 animated:YES];
+                if ([pickerView selectedRowInComponent:1] > _maxMonthRow) {
+                    [pickerView selectRow:_maxMonthRow inComponent:1 animated:YES];
+                    _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",_maxYearRow + 1970,_maxMonthRow];
+                    _selectedMonth = _maxMonthRow;
+                    [pickerView reloadComponent:1];
+                }
+            }
+            
+            if (row == _minYearRow) {
+                _selectedYear = _minYearRow;
+                if ([pickerView selectedRowInComponent:1] < _minMonthRow) {
+                    [pickerView selectRow:_minMonthRow inComponent:1 animated:YES];
+                    _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",_minYearRow + 1970,_minMonthRow];
+                    _selectedMonth = _minMonthRow;
                 }
             }
             
             if (row == _maxYearRow) {
+                
+                _selectedYear = _maxYearRow;
                 if ([pickerView selectedRowInComponent:1] > _maxMonthRow) {
                     [pickerView selectRow:_maxMonthRow inComponent:1 animated:YES];
                     _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",_maxYearRow + 1970,_maxMonthRow];
+                    _selectedMonth = _maxMonthRow;
                 }
             }
-
+            _selectedYear = [pickerView selectedRowInComponent:0];
         }
             break;
+            
         case 1:{
+            
             if ([pickerView selectedRowInComponent:0] == _minYearRow && row < _minMonthRow) {
+                
                 _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",[_pickerView selectedRowInComponent:0] + 1970,_minMonthRow];
-
                 [pickerView selectRow:_minMonthRow inComponent:1 animated:YES];
             } else if ([pickerView selectedRowInComponent:0] == _maxYearRow && row > _maxMonthRow) {
                 _selectedDateString = [NSString stringWithFormat:@"%ld年%.2ld月",[_pickerView selectedRowInComponent:0] + 1970,_maxMonthRow];
@@ -212,6 +236,7 @@
 #pragma mark - override
 - (void)willMoveToSuperview:(UIView *)newSuperview {
     [super willMoveToSuperview:newSuperview];
+//    [self makeKeyWindow];
     [self.pickerView selectRow:self.currentComponent.year - 1970 inComponent:0 animated:NO];
     [self.pickerView selectRow:self.currentComponent.month - 1 inComponent:1 animated:NO];
     
@@ -229,6 +254,7 @@
 }
 
 - (void)removeFromSuperview {
+//    [self resignKeyWindow];
     [UIView animateWithDuration:0.4 animations:^{
         self.frame = CGRectMake(0, YM_SCREEN_HEIGHT, YM_SCREEN_WIDTH, 300);
     } completion:^(BOOL finished) {
